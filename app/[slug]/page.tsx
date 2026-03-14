@@ -46,7 +46,7 @@ export default async function BusinessPublicPage({ params }: Props) {
 
   if (!business) notFound();
 
-  const primary = business.primaryColor ?? "#2D2D2D";
+  const primary = business.primaryColor ?? "#F97316";
   const hex = primary.replace("#", "");
   const r = parseInt(hex.substring(0, 2), 16);
   const g = parseInt(hex.substring(2, 4), 16);

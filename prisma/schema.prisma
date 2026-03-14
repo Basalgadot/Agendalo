@@ -67,7 +67,7 @@ model Business {
   logoUrl      String?
   coverUrl     String?
   // Color primario del negocio para su página pública (marca blanca)
-  primaryColor String?  @default("#2D2D2D")
+  primaryColor String?  @default("#F97316")
   address     String?
   phone       String?
   email       String?

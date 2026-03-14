@@ -30,7 +30,7 @@ export function CalendarioClient({ bookings }: { bookings: BookingSummary[] }) {
     today.toISOString().split("T")[0]
   );
 
-  const primary = bookings[0]?.primaryColor ?? "#2D2D2D";
+  const primary = bookings[0]?.primaryColor ?? "#F97316";
 
   // Días del mes
   const firstDay = new Date(year, month, 1);

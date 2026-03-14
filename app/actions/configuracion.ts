@@ -58,7 +58,7 @@ export async function guardarApariencia(_prev: ActionState, formData: FormData):
   const business = await getAuthBusiness();
 
   const raw = {
-    primaryColor: (formData.get("primaryColor") as string) || "#2D2D2D",
+    primaryColor: (formData.get("primaryColor") as string) || "#F97316",
     logoUrl: (formData.get("logoUrl") as string) || null,
     coverUrl: (formData.get("coverUrl") as string) || null,
   };

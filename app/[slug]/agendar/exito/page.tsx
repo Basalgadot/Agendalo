@@ -27,7 +27,7 @@ export default async function ExitoPage({ params, searchParams }: Props) {
     });
   }
 
-  const primary = business.primaryColor ?? "#2D2D2D";
+  const primary = business.primaryColor ?? "#F97316";
 
   return (
     <>
