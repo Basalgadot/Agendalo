@@ -1,15 +1,25 @@
 import Link from "next/link";
+import Image from "next/image";
 import { buttonVariants } from "@/lib/button-variants";
 import { cn } from "@/lib/utils";
 import { Calendar, Clock, Users, Zap } from "lucide-react";
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-white">
-      {/* Nav */}
-      <nav className="border-b border-border px-6 py-4">
+    <main className="min-h-screen bg-background">
+      {/* Nav — fondo #2D2D2D igual que el borde del logo */}
+      <nav className="bg-[#2D2D2D] border-b border-[#444444] px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <span className="text-xl font-bold text-primary">agéndalo</span>
+          <Link href="/">
+            <Image
+              src="/logo.svg"
+              alt="Agéndalo"
+              width={160}
+              height={40}
+              className="h-10 w-auto object-contain"
+              priority
+            />
+          </Link>
           <div className="flex gap-3">
             <Link href="/login" className={buttonVariants({ variant: "ghost" })}>
               Iniciar sesión
@@ -63,9 +73,9 @@ export default function HomePage() {
             desc: "Tus clientes agendan solos desde tu página personalizada.",
           },
         ].map(({ icon: Icon, title, desc }) => (
-          <div key={title} className="bg-secondary rounded-xl p-6">
+          <div key={title} className="bg-card border border-border rounded-xl p-6">
             <Icon className="text-primary mb-3 h-6 w-6" />
-            <h3 className="font-semibold mb-1">{title}</h3>
+            <h3 className="font-semibold text-foreground mb-1">{title}</h3>
             <p className="text-sm text-muted-foreground">{desc}</p>
           </div>
         ))}
