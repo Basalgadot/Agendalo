@@ -8,23 +8,23 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-background">
       {/* Nav — fondo #2D2D2D igual que el borde del logo */}
-      <nav className="bg-[#2D2D2D] border-b border-[#444444] px-6 py-4">
+      <nav className="bg-[#2D2D2D] border-b border-[#444444] px-8 py-5">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <Link href="/">
             <Image
               src="/logo.svg"
               alt="Agéndalo"
-              width={160}
-              height={40}
-              className="h-10 w-auto object-contain"
+              width={210}
+              height={52}
+              className="h-13 w-auto object-contain"
               priority
             />
           </Link>
-          <div className="flex gap-3">
-            <Link href="/login" className={buttonVariants({ variant: "ghost" })}>
+          <div className="flex gap-4">
+            <Link href="/login" className={buttonVariants({ variant: "ghost", size: "lg" })}>
               Iniciar sesión
             </Link>
-            <Link href="/registro" className={buttonVariants({ variant: "default" })}>
+            <Link href="/registro" className={cn(buttonVariants({ variant: "default", size: "lg" }), "px-6")}>
               Registrar mi negocio
             </Link>
           </div>
