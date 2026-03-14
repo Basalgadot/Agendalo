@@ -30,7 +30,7 @@ export default async function AgendarPage({ params }: Props) {
     business.trialEndsAt != null &&
     business.trialEndsAt < new Date();
 
-  const primary = business.primaryColor ?? "#6C47FF";
+  const primary = business.primaryColor ?? "#2D2D2D";
 
   if (isTrialExpired) {
     return (

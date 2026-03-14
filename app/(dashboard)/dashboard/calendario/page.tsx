@@ -38,7 +38,7 @@ export default async function CalendarioPage() {
         guestName: b.guestName,
         serviceName: b.service.name,
         professionalName: b.professional.name,
-        primaryColor: business.primaryColor ?? "#6C47FF",
+        primaryColor: business.primaryColor ?? "#2D2D2D",
       }))}
     />
   );

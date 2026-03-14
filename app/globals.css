@@ -49,8 +49,8 @@
 
 :root {
   /* Agéndalo Brand Colors */
-  --brand-primary: #6C47FF;
-  --brand-primary-dark: #4F35CC;
+  --brand-primary: #2D2D2D;
+  --brand-primary-dark: #1A1A1A;
 
   --background: oklch(1 0 0);
   --foreground: oklch(0.13 0 0);           /* #111827 */
@@ -58,7 +58,7 @@
   --card-foreground: oklch(0.13 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.13 0 0);
-  --primary: oklch(0.51 0.27 280);         /* #6C47FF violeta */
+  --primary: oklch(0.22 0 0);              /* #2D2D2D gris oscuro */
   --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.978 0 0);           /* #F9FAFB surface */
   --secondary-foreground: oklch(0.13 0 0);
@@ -69,7 +69,7 @@
   --destructive: oklch(0.60 0.21 27);      /* #EF4444 */
   --border: oklch(0.92 0 0);              /* #E5E7EB */
   --input: oklch(0.92 0 0);
-  --ring: oklch(0.51 0.27 280);            /* mismo que primary */
+  --ring: oklch(0.22 0 0);                 /* mismo que primary */
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
   --chart-3: oklch(0.546 0.245 262.881);

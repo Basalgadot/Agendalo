@@ -139,7 +139,7 @@ export function ConfiguracionClient({ business, schedules }: Props) {
                     <input
                       type="color"
                       name="primaryColor"
-                      defaultValue={business.primaryColor ?? "#6C47FF"}
+                      defaultValue={business.primaryColor ?? "#2D2D2D"}
                       className="h-10 w-16 cursor-pointer rounded-lg border border-border p-1"
                     />
                     <p className="text-sm text-muted-foreground">
