@@ -1,0 +1,253 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum UserRole {
+  CLIENT
+  BUSINESS_OWNER
+  SUPERADMIN
+}
+
+enum BusinessPlan {
+  FREE_TRIAL
+  FREE
+  PRO
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+// ─────────────────────────────────────────────
+// USER (espeja Supabase Auth)
+// ─────────────────────────────────────────────
+
+model User {
+  id                      String   @id @default(uuid())
+  email                   String   @unique
+  name                    String?
+  phone                   String?
+  avatarUrl               String?
+  role                    UserRole @default(CLIENT)
+  googleCalendarConnected Boolean  @default(false)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  business Business?
+  bookings Booking[]
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────
+// BUSINESS (Negocio registrado en la plataforma)
+// ─────────────────────────────────────────────
+
+model Business {
+  id          String       @id @default(uuid())
+  name        String
+  // slug: ruta pública → agendalo.app/barberia-hermanos-cortez
+  slug        String       @unique
+  // subdomain: subdominio propio → barberiahermanoscortez.agendalo.app
+  subdomain   String?      @unique
+  description String?
+  category    String?
+  logoUrl      String?
+  coverUrl     String?
+  // Color primario del negocio para su página pública (marca blanca)
+  primaryColor String?  @default("#6C47FF")
+  address     String?
+  phone       String?
+  email       String?
+  website     String?
+  plan        BusinessPlan @default(FREE_TRIAL)
+  trialEndsAt DateTime?
+  isActive    Boolean      @default(true)
+  // Duración mínima de slots en minutos (15, 30, 60)
+  slotDuration        Int     @default(30)
+  onboardingCompleted Boolean @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  ownerId String   @unique
+  owner   User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  professionals Professional[]
+  services      Service[]
+  schedules     BusinessSchedule[]
+  blockedSlots  BlockedSlot[]
+  bookings      Booking[]
+
+  @@map("businesses")
+}
+
+// ─────────────────────────────────────────────
+// PROFESSIONAL (Profesional del negocio)
+// ─────────────────────────────────────────────
+
+model Professional {
+  id        String   @id @default(uuid())
+  name      String
+  bio       String?
+  avatarUrl String?
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  scheduleOverrides ProfessionalSchedule[]
+  bookings          Booking[]
+  services          ProfessionalService[]
+  blockedSlots      BlockedSlot[]
+
+  @@map("professionals")
+}
+
+// ─────────────────────────────────────────────
+// SERVICE (Servicio que ofrece el negocio)
+// ─────────────────────────────────────────────
+
+model Service {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  duration    Int      // minutos
+  price       Decimal? @db.Decimal(10, 2)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  professionals ProfessionalService[]
+  bookings      Booking[]
+
+  @@map("services")
+}
+
+// Relación muchos-a-muchos: Professional ↔ Service
+model ProfessionalService {
+  professionalId String
+  serviceId      String
+
+  professional Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  service      Service      @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([professionalId, serviceId])
+  @@map("professional_services")
+}
+
+// ─────────────────────────────────────────────
+// BUSINESS SCHEDULE (Horario base del negocio)
+// ─────────────────────────────────────────────
+
+model BusinessSchedule {
+  id        String   @id @default(uuid())
+  dayOfWeek Int      // 0=domingo, 1=lunes, ..., 6=sábado
+  openTime  String   // "09:00"
+  closeTime String   // "18:00"
+  isOpen    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, dayOfWeek])
+  @@map("business_schedules")
+}
+
+// ─────────────────────────────────────────────
+// PROFESSIONAL SCHEDULE (Override de horario por profesional)
+// ─────────────────────────────────────────────
+
+model ProfessionalSchedule {
+  id        String   @id @default(uuid())
+  dayOfWeek Int      // 0-6
+  openTime  String   // "09:00"
+  closeTime String   // "18:00"
+  isOpen    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  professionalId String
+  professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@unique([professionalId, dayOfWeek])
+  @@map("professional_schedules")
+}
+
+// ─────────────────────────────────────────────
+// BLOCKED SLOT (Tiempo bloqueado)
+// ─────────────────────────────────────────────
+
+model BlockedSlot {
+  id        String   @id @default(uuid())
+  date      DateTime @db.Date
+  startTime String   // "14:00"
+  endTime   String   // "15:00"
+  reason    String?
+  isAllDay  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  businessId     String
+  business       Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  professionalId String?
+  professional   Professional? @relation(fields: [professionalId], references: [id], onDelete: SetNull)
+
+  @@map("blocked_slots")
+}
+
+// ─────────────────────────────────────────────
+// BOOKING (Cita)
+// ─────────────────────────────────────────────
+
+model Booking {
+  id                    String        @id @default(uuid())
+  date                  DateTime      @db.Date
+  startTime             String        // "10:00"
+  endTime               String        // "10:30"
+  status                BookingStatus @default(PENDING)
+  notes                 String?
+  cancellationReason    String?
+  confirmedAt           DateTime?
+  cancelledAt           DateTime?
+  googleCalendarEventId String?       // ID del evento en Google Calendar del cliente
+
+  // Datos del cliente invitado (sin cuenta)
+  guestName  String?
+  guestEmail String?
+  guestPhone String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  businessId     String
+  business       Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  professionalId String
+  professional   Professional @relation(fields: [professionalId], references: [id])
+  serviceId      String
+  service        Service      @relation(fields: [serviceId], references: [id])
+  clientId       String?      // null si es invitado
+  client         User?        @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  @@index([businessId, date])
+  @@index([professionalId, date])
+  @@map("bookings")
+}
