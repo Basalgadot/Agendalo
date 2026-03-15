@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const roboto = Roboto({
-  variable: "--font-sans",
+  variable: "--font-roboto",
   subsets: ["latin"],
   weight: ["300", "400", "500", "700", "900"],
 });
@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={`${roboto.variable} antialiased`}>
+      <body className={`${roboto.variable} font-sans antialiased`}>
         {children}
         <Toaster richColors position="top-right" />
       </body>
