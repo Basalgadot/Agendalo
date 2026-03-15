@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { DashboardNav } from "./dashboard-nav";
+import Link from "next/link";
+import { Logo } from "@/components/logo";
 
 export default async function DashboardLayout({
   children,
@@ -45,9 +47,11 @@ export default async function DashboardLayout({
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-border bg-white flex flex-col">
-        <div className="p-6 border-b border-border">
-          <span className="text-lg font-bold text-primary">agéndalo</span>
+      <aside className="w-64 border-r border-border bg-sidebar flex flex-col">
+        <div className="p-4 border-b border-border">
+          <Link href="/">
+            <Logo className="scale-75 origin-left" />
+          </Link>
         </div>
 
         <DashboardNav />
