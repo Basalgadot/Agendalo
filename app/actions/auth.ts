@@ -87,17 +87,21 @@ export async function registro(
     return { error: "Error al crear la cuenta. Intenta de nuevo." };
   }
 
-  // Guardar nombre en metadata para usarlo al confirmar
-  await prisma.user.upsert({
-    where: { id: data.user.id },
-    update: { name: result.data.name },
-    create: {
-      id: data.user.id,
-      email: result.data.email,
-      name: result.data.name,
-      role: "BUSINESS_OWNER",
-    },
-  });
+  // Guardar en DB — si falla, igual seguimos (se crea al confirmar)
+  try {
+    await prisma.user.upsert({
+      where: { id: data.user.id },
+      update: { name: result.data.name },
+      create: {
+        id: data.user.id,
+        email: result.data.email,
+        name: result.data.name,
+        role: "BUSINESS_OWNER",
+      },
+    });
+  } catch (dbErr) {
+    console.error("[registro] DB error (non-fatal):", dbErr);
+  }
 
   redirect(`/confirmar-email?email=${encodeURIComponent(result.data.email)}`);
 }
