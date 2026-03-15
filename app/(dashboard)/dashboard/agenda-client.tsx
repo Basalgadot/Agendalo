@@ -214,7 +214,7 @@ export function AgendaClient({ business, citas, profesionales, servicios, citasH
               {/* Header del día */}
               <div
                 className={`text-center py-2 rounded-lg mb-2 ${
-                  esHoy ? "bg-primary text-white" : "bg-white border border-border"
+                  esHoy ? "bg-primary text-white" : "bg-secondary border border-border"
                 }`}
               >
                 <p className="text-xs font-medium uppercase">
