@@ -70,7 +70,10 @@ export async function registro(
   const { data, error } = await supabase.auth.signUp({
     email: result.data.email,
     password: result.data.password,
-    options: { data: { name: result.data.name } },
+    options: {
+      data: { name: result.data.name },
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+    },
   });
 
   if (error) {
@@ -84,7 +87,7 @@ export async function registro(
     return { error: "Error al crear la cuenta. Intenta de nuevo." };
   }
 
-  // Crear perfil en DB
+  // Guardar nombre en metadata para usarlo al confirmar
   await prisma.user.upsert({
     where: { id: data.user.id },
     update: { name: result.data.name },
@@ -96,69 +99,26 @@ export async function registro(
     },
   });
 
-  // Enviar OTP de 6 dígitos para verificar email
-  await supabase.auth.signInWithOtp({
-    email: result.data.email,
-    options: { shouldCreateUser: false },
-  });
-
   redirect(`/confirmar-email?email=${encodeURIComponent(result.data.email)}`);
 }
 
-export async function verificarOtp(
-  _prevState: AuthState,
-  formData: FormData
-): Promise<AuthState> {
-  const email = formData.get("email") as string;
-  const token = (formData.get("token") as string)?.trim();
-
-  if (!token || token.length !== 6) {
-    return { error: "Ingresa el código de 6 dígitos" };
-  }
-
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.verifyOtp({
-    email,
-    token,
-    type: "email",
-  });
-
-  if (error) {
-    return { error: "Código incorrecto o expirado. Revisa tu email o solicita uno nuevo." };
-  }
-
-  if (data.user) {
-    const name = (data.user.user_metadata?.name as string) ?? "Usuario";
-    await prisma.user.upsert({
-      where: { id: data.user.id },
-      update: { name },
-      create: {
-        id: data.user.id,
-        email: data.user.email!,
-        name,
-        role: "BUSINESS_OWNER",
-      },
-    });
-  }
-
-  revalidatePath("/", "layout");
-  redirect("/onboarding");
-}
-
-export async function reenviarOtp(
+export async function reenviarConfirmacion(
   _prevState: AuthState,
   formData: FormData
 ): Promise<AuthState> {
   const email = formData.get("email") as string;
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithOtp({
+  const { error } = await supabase.auth.resend({
+    type: "signup",
     email,
-    options: { shouldCreateUser: false },
+    options: {
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+    },
   });
 
   if (error) {
-    return { error: "No se pudo reenviar el código. Intenta de nuevo." };
+    return { error: "No se pudo reenviar el email. Intenta de nuevo." };
   }
 
   return { success: true };
