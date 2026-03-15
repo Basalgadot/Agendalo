@@ -12,7 +12,7 @@ export function Logo({ className }: { className?: string }) {
       </svg>
 
       {/* Wordmark */}
-      <span className="text-3xl font-bold tracking-tight text-white leading-none">
+      <span className="text-3xl font-bold tracking-tight text-white leading-none font-sans">
         Ag<span className="relative inline-block">
           {/* "é" naranja debajo */}
           <span className="text-[#F97316]">é</span>
