@@ -20,9 +20,9 @@ const infoSchema = z.object({
   description: z.string().optional().nullable(),
   phone: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
+  instagram: z.string().optional().nullable(),
+  email: z.string().email("Email inválido").optional().nullable().or(z.literal("")),
   slotDuration: z.coerce.number().refine((v) => [15, 30, 60].includes(v), "Duración inválida"),
-  primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Color inválido").optional().nullable(),
-  logoUrl: z.string().url().optional().nullable().or(z.literal("")),
 });
 
 type ActionState = { error?: string; success?: boolean };
@@ -35,9 +35,9 @@ export async function guardarInfoNegocio(_prev: ActionState, formData: FormData)
     description: formData.get("description") || null,
     phone: formData.get("phone") || null,
     address: formData.get("address") || null,
+    instagram: formData.get("instagram") || null,
+    email: formData.get("email") || null,
     slotDuration: formData.get("slotDuration") as string,
-    primaryColor: formData.get("primaryColor") as string || null,
-    logoUrl: formData.get("logoUrl") as string || null,
   };
 
   const result = infoSchema.safeParse(raw);

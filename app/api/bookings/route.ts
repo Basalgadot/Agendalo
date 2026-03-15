@@ -48,6 +48,11 @@ export async function POST(req: NextRequest) {
   // Verificar que el negocio existe
   const business = await prisma.business.findUnique({
     where: { slug: data.businessSlug, isActive: true },
+    select: {
+      id: true, name: true, slug: true, plan: true, email: true,
+      primaryColor: true, logoUrl: true, phone: true, address: true,
+      instagram: true, website: true,
+    },
   });
   if (!business) return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 });
 
@@ -125,19 +130,27 @@ export async function POST(req: NextRequest) {
 
   const emailPromises = [];
 
+  const businessBranding = {
+    name: business.name,
+    primaryColor: business.primaryColor,
+    logoUrl: business.logoUrl,
+    phone: business.phone,
+    address: business.address,
+    instagram: business.instagram,
+    website: business.website,
+  };
+
   if (clientEmail) {
     emailPromises.push(
       enviarConfirmacionCliente({
         toEmail: clientEmail,
         toName: clientName,
-        businessName: business.name,
+        business: businessBranding,
         serviceName: service.name,
         professionalName: professional.name,
         date: dateLabel,
         startTime: data.startTime,
         endTime: data.endTime,
-        businessPhone: business.phone,
-        businessAddress: business.address,
       })
     );
   }
@@ -146,7 +159,7 @@ export async function POST(req: NextRequest) {
     emailPromises.push(
       enviarNotificacionNegocio({
         toEmail: business.email,
-        businessName: business.name,
+        business: businessBranding,
         clientName,
         clientEmail: data.guestEmail,
         clientPhone: data.guestPhone,

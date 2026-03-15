@@ -72,6 +72,7 @@ model Business {
   phone       String?
   email       String?
   website     String?
+  instagram   String?
   plan        BusinessPlan @default(FREE_TRIAL)
   trialEndsAt DateTime?
   isActive    Boolean      @default(true)
@@ -89,6 +90,7 @@ model Business {
   schedules     BusinessSchedule[]
   blockedSlots  BlockedSlot[]
   bookings      Booking[]
+  campaigns     Campaign[]
 
   @@map("businesses")
 }
@@ -229,6 +231,7 @@ model Booking {
   confirmedAt           DateTime?
   cancelledAt           DateTime?
   googleCalendarEventId String?       // ID del evento en Google Calendar del cliente
+  reminderSent          Boolean       @default(false)
 
   // Datos del cliente invitado (sin cuenta)
   guestName  String?
@@ -250,4 +253,32 @@ model Booking {
   @@index([businessId, date])
   @@index([professionalId, date])
   @@map("bookings")
+}
+
+// ─────────────────────────────────────────────
+// CAMPAIGN (Campaña de email marketing)
+// ─────────────────────────────────────────────
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENT
+}
+
+model Campaign {
+  id             String         @id @default(uuid())
+  name           String         // Nombre interno: "Promo verano"
+  subject        String         // Asunto del email
+  body           String         @db.Text // Cuerpo en HTML/texto
+  status         CampaignStatus @default(DRAFT)
+  scheduledAt    DateTime?      // Cuándo enviar (null = borrador)
+  sentAt         DateTime?
+  recipientCount Int            @default(0)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@map("campaigns")
 }

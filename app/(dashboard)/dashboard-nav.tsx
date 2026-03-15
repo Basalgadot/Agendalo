@@ -4,13 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { buttonVariants } from "@/lib/button-variants";
 import { cn } from "@/lib/utils";
-import { Calendar, Settings, Users, Scissors, LayoutDashboard } from "lucide-react";
+import { Calendar, Settings, Users, Scissors, LayoutDashboard, Megaphone } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Agenda", icon: LayoutDashboard },
   { href: "/dashboard/calendario", label: "Calendario", icon: Calendar },
   { href: "/dashboard/servicios", label: "Servicios", icon: Scissors },
   { href: "/dashboard/profesionales", label: "Profesionales", icon: Users },
+  { href: "/dashboard/campanas", label: "Campañas", icon: Megaphone },
   { href: "/dashboard/configuracion", label: "Configuración", icon: Settings },
 ];
 

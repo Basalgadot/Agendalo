@@ -160,6 +160,17 @@ export function ConfiguracionClient({ business, schedules }: Props) {
                     <Input name="address" defaultValue={business.address ?? ""} placeholder="Av. Principal 123" />
                   </div>
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Instagram</Label>
+                    <Input name="instagram" defaultValue={(business as { instagram?: string }).instagram ?? ""} placeholder="@tunegocio" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Email de contacto</Label>
+                    <Input name="email" type="email" defaultValue={business.email ?? ""} placeholder="contacto@tunegocio.cl" />
+                    <p className="text-xs text-muted-foreground">Aquí recibirás las notificaciones de nuevas citas.</p>
+                  </div>
+                </div>
                 <div className="space-y-2">
                   <Label>Duración mínima de slots</Label>
                   <select
