@@ -45,10 +45,14 @@ export async function guardarPaso1(_prev: { error?: string }, formData: FormData
     const result = paso1Schema.safeParse(raw);
     if (!result.success) return { error: result.error.issues[0].message };
 
-    // Garantizar que el User existe en nuestra DB (puede faltar si el registro tuvo error de DB)
+    // Garantizar que el User existe en nuestra DB
+    // Si hay un registro con el mismo email pero distinto id (registro previo fallido), lo limpiamos
+    await prisma.user.deleteMany({
+      where: { email: user.email!, NOT: { id: user.id } },
+    });
     await prisma.user.upsert({
       where: { id: user.id },
-      update: {},
+      update: { email: user.email!, name: (user.user_metadata?.name as string) ?? "Usuario" },
       create: {
         id: user.id,
         email: user.email!,
