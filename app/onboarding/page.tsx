@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useSearchParams } from "next/navigation";
 import { useActionState } from "react";
 import { OnboardingProgress } from "@/components/shared/onboarding-progress";
@@ -197,36 +198,65 @@ function Paso3() {
   );
 }
 
-// ── Paso 4: Primer servicio ───────────────────────────────────────────────────
+// ── Paso 4: Servicios ────────────────────────────────────────────────────────
 function Paso4() {
   const [state, action, pending] = useActionState(guardarPaso4, { error: undefined } as { error?: string });
+  const [servicios, setServicios] = React.useState([{ id: 0 }]);
+
+  const agregar = () => setServicios((prev) => [...prev, { id: Date.now() }]);
+  const eliminar = (id: number) => setServicios((prev) => prev.filter((s) => s.id !== id));
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Tu primer servicio</CardTitle>
-        <CardDescription>Agrega el servicio que más ofreces. Podrás agregar más después.</CardDescription>
+        <CardTitle>Tus servicios</CardTitle>
+        <CardDescription>Agrega todos los servicios que ofreces. Podrás modificarlos después.</CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={action} className="space-y-4">
+        <form action={action} className="space-y-6">
           {state?.error && <ErrorMsg msg={state.error} />}
-          <div className="space-y-2">
-            <Label htmlFor="name">Nombre del servicio *</Label>
-            <Input id="name" name="name" placeholder="Ej: Corte de cabello" required />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="duration">Duración (minutos) *</Label>
-              <Input id="duration" name="duration" type="number" min={15} step={15} defaultValue={30} required />
+          <input type="hidden" name="service_count" value={servicios.length} />
+          {servicios.map((s, i) => (
+            <div key={s.id} className="space-y-3 p-4 border border-border rounded-lg">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-muted-foreground">Servicio {i + 1}</span>
+                {servicios.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => eliminar(s.id)}
+                    className="text-xs text-destructive hover:underline"
+                  >
+                    Eliminar
+                  </button>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Nombre *</Label>
+                <Input name={`service_${i}_name`} placeholder="Ej: Corte de cabello" required />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Duración (min) *</Label>
+                  <Input name={`service_${i}_duration`} type="number" min={15} step={15} defaultValue={30} required />
+                </div>
+                <div className="space-y-2">
+                  <Label>Precio (opcional)</Label>
+                  <Input name={`service_${i}_price`} type="number" min={0} step={1} placeholder="0" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Descripción (opcional)</Label>
+                <Input name={`service_${i}_description`} placeholder="Incluye lavado y secado" />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="price">Precio (opcional)</Label>
-              <Input id="price" name="price" type="number" min={0} step={1} placeholder="0" />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">Descripción (opcional)</Label>
-            <Input id="description" name="description" placeholder="Incluye lavado y secado" />
-          </div>
+          ))}
+          <button
+            type="button"
+            onClick={agregar}
+            className="w-full py-2 text-sm text-primary border border-dashed border-primary rounded-lg hover:bg-primary/10 transition-colors"
+          >
+            + Agregar otro servicio
+          </button>
           <Button type="submit" className="w-full" disabled={pending}>
             {pending ? "Guardando..." : "Continuar →"}
           </Button>
@@ -236,26 +266,55 @@ function Paso4() {
   );
 }
 
-// ── Paso 5: Primer profesional ────────────────────────────────────────────────
+// ── Paso 5: Profesionales ─────────────────────────────────────────────────────
 function Paso5() {
   const [state, action, pending] = useActionState(guardarPaso5, { error: undefined } as { error?: string });
+  const [profesionales, setProfesionales] = React.useState([{ id: 0 }]);
+
+  const agregar = () => setProfesionales((prev) => [...prev, { id: Date.now() }]);
+  const eliminar = (id: number) => setProfesionales((prev) => prev.filter((p) => p.id !== id));
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Tu primer profesional</CardTitle>
-        <CardDescription>¿Quién va a atender las citas? Puedes ser tú mismo.</CardDescription>
+        <CardTitle>Tu equipo</CardTitle>
+        <CardDescription>¿Quiénes van a atender las citas? Puedes agregar más personas después.</CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={action} className="space-y-4">
+        <form action={action} className="space-y-6">
           {state?.error && <ErrorMsg msg={state.error} />}
-          <div className="space-y-2">
-            <Label htmlFor="name">Nombre *</Label>
-            <Input id="name" name="name" placeholder="Ej: Carlos Cortez" required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="bio">Bio corta (opcional)</Label>
-            <Input id="bio" name="bio" placeholder="Ej: 10 años de experiencia en cortes modernos" />
-          </div>
+          <input type="hidden" name="prof_count" value={profesionales.length} />
+          {profesionales.map((p, i) => (
+            <div key={p.id} className="space-y-3 p-4 border border-border rounded-lg">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-muted-foreground">Persona {i + 1}</span>
+                {profesionales.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => eliminar(p.id)}
+                    className="text-xs text-destructive hover:underline"
+                  >
+                    Eliminar
+                  </button>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Nombre *</Label>
+                <Input name={`prof_${i}_name`} placeholder="Ej: Carlos Cortez" required />
+              </div>
+              <div className="space-y-2">
+                <Label>Bio corta (opcional)</Label>
+                <Input name={`prof_${i}_bio`} placeholder="Ej: 10 años de experiencia en cortes modernos" />
+              </div>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={agregar}
+            className="w-full py-2 text-sm text-primary border border-dashed border-primary rounded-lg hover:bg-primary/10 transition-colors"
+          >
+            + Agregar otra persona
+          </button>
           <Button type="submit" className="w-full" disabled={pending}>
             {pending ? "Terminando configuración..." : "¡Listo, abrir mi agenda! →"}
           </Button>

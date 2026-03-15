@@ -134,10 +134,10 @@ export async function guardarPaso3(_prev: { error?: string }, formData: FormData
   redirect("/onboarding?paso=4");
 }
 
-// ── PASO 4: Primer servicio ───────────────────────────────────────────────────
+// ── PASO 4: Servicios ─────────────────────────────────────────────────────────
 
-const paso4Schema = z.object({
-  name: z.string().min(2, "Nombre muy corto"),
+const servicioSchema = z.object({
+  name: z.string().min(2, "Nombre de servicio muy corto"),
   duration: z.coerce.number().min(15, "Mínimo 15 minutos"),
   price: z.coerce.number().min(0).optional(),
   description: z.string().optional(),
@@ -148,31 +148,37 @@ export async function guardarPaso4(_prev: { error?: string }, formData: FormData
   const business = await getBusinessForUser(user.id);
   if (!business) redirect("/onboarding");
 
-  const raw = {
-    name: formData.get("name") as string,
-    duration: formData.get("duration") as string,
-    price: formData.get("price") as string,
-    description: formData.get("description") as string,
-  };
+  const count = Number(formData.get("service_count") || "1");
+  const servicios = [];
 
-  const result = paso4Schema.safeParse(raw);
-  if (!result.success) return { error: result.error.issues[0].message };
+  for (let i = 0; i < count; i++) {
+    const raw = {
+      name: formData.get(`service_${i}_name`) as string,
+      duration: formData.get(`service_${i}_duration`) as string,
+      price: formData.get(`service_${i}_price`) as string,
+      description: formData.get(`service_${i}_description`) as string,
+    };
+    const result = servicioSchema.safeParse(raw);
+    if (!result.success) return { error: `Servicio ${i + 1}: ${result.error.issues[0].message}` };
+    servicios.push(result.data);
+  }
 
-  await prisma.service.create({
-    data: {
-      ...result.data,
-      price: result.data.price ?? null,
-      description: result.data.description || null,
+  await prisma.service.createMany({
+    data: servicios.map((s) => ({
+      name: s.name,
+      duration: s.duration,
+      price: s.price ?? null,
+      description: s.description || null,
       businessId: business.id,
-    },
+    })),
   });
 
   redirect("/onboarding?paso=5");
 }
 
-// ── PASO 5: Primer profesional ────────────────────────────────────────────────
+// ── PASO 5: Profesionales ─────────────────────────────────────────────────────
 
-const paso5Schema = z.object({
+const profesionalSchema = z.object({
   name: z.string().min(2, "Nombre muy corto"),
   bio: z.string().optional(),
 });
@@ -182,33 +188,40 @@ export async function guardarPaso5(_prev: { error?: string }, formData: FormData
   const business = await getBusinessForUser(user.id);
   if (!business) redirect("/onboarding");
 
-  const raw = {
-    name: formData.get("name") as string,
-    bio: formData.get("bio") as string,
-  };
+  const count = Number(formData.get("prof_count") || "1");
+  const profesionalesData = [];
 
-  const result = paso5Schema.safeParse(raw);
-  if (!result.success) return { error: result.error.issues[0].message };
+  for (let i = 0; i < count; i++) {
+    const raw = {
+      name: formData.get(`prof_${i}_name`) as string,
+      bio: formData.get(`prof_${i}_bio`) as string,
+    };
+    const result = profesionalSchema.safeParse(raw);
+    if (!result.success) return { error: `Persona ${i + 1}: ${result.error.issues[0].message}` };
+    profesionalesData.push(result.data);
+  }
 
-  // Crear el profesional
-  const profesional = await prisma.professional.create({
-    data: {
-      name: result.data.name,
-      bio: result.data.bio || null,
-      businessId: business.id,
-    },
-  });
-
-  // Asignar todos los servicios existentes a este primer profesional
+  // Crear todos los profesionales y asignarles todos los servicios
   const servicios = await prisma.service.findMany({ where: { businessId: business.id } });
-  if (servicios.length > 0) {
-    await prisma.professionalService.createMany({
-      data: servicios.map((s) => ({
-        professionalId: profesional.id,
-        serviceId: s.id,
-      })),
-      skipDuplicates: true,
+
+  for (const pd of profesionalesData) {
+    const profesional = await prisma.professional.create({
+      data: {
+        name: pd.name,
+        bio: pd.bio || null,
+        businessId: business.id,
+      },
     });
+
+    if (servicios.length > 0) {
+      await prisma.professionalService.createMany({
+        data: servicios.map((s) => ({
+          professionalId: profesional.id,
+          serviceId: s.id,
+        })),
+        skipDuplicates: true,
+      });
+    }
   }
 
   // Marcar onboarding como completado
