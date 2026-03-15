@@ -45,6 +45,18 @@ export async function guardarPaso1(_prev: { error?: string }, formData: FormData
     const result = paso1Schema.safeParse(raw);
     if (!result.success) return { error: result.error.issues[0].message };
 
+    // Garantizar que el User existe en nuestra DB (puede faltar si el registro tuvo error de DB)
+    await prisma.user.upsert({
+      where: { id: user.id },
+      update: {},
+      create: {
+        id: user.id,
+        email: user.email!,
+        name: (user.user_metadata?.name as string) ?? "Usuario",
+        role: "BUSINESS_OWNER",
+      },
+    });
+
     let slug = slugify(result.data.name);
     const subdomain = toSubdomain(result.data.name);
 
