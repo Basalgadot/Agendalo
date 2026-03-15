@@ -70,35 +70,38 @@ export async function registro(
   const { data, error } = await supabase.auth.signUp({
     email: result.data.email,
     password: result.data.password,
-    options: {
-      data: { name: result.data.name },
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
-    },
+    options: { data: { name: result.data.name } },
   });
 
   if (error) {
-    if (error.code === "user_already_exists") {
+    if (error.code === "user_already_exists" || error.message?.includes("already registered")) {
       return { error: "Ya existe una cuenta con ese email" };
     }
     return { error: "Error al crear la cuenta. Intenta de nuevo." };
   }
 
-  // Si Supabase no requiere confirmación (dev sin email confirm)
-  if (data.user && data.session) {
-    await prisma.user.upsert({
-      where: { id: data.user.id },
-      update: { name: result.data.name },
-      create: {
-        id: data.user.id,
-        email: result.data.email,
-        name: result.data.name,
-        role: "BUSINESS_OWNER",
-      },
-    });
-    redirect("/onboarding");
+  if (!data.user) {
+    return { error: "Error al crear la cuenta. Intenta de nuevo." };
   }
 
-  // Email de confirmación enviado — redirigir a página OTP
+  // Crear perfil en DB
+  await prisma.user.upsert({
+    where: { id: data.user.id },
+    update: { name: result.data.name },
+    create: {
+      id: data.user.id,
+      email: result.data.email,
+      name: result.data.name,
+      role: "BUSINESS_OWNER",
+    },
+  });
+
+  // Enviar OTP de 6 dígitos para verificar email
+  await supabase.auth.signInWithOtp({
+    email: result.data.email,
+    options: { shouldCreateUser: false },
+  });
+
   redirect(`/confirmar-email?email=${encodeURIComponent(result.data.email)}`);
 }
 
@@ -117,7 +120,7 @@ export async function verificarOtp(
   const { data, error } = await supabase.auth.verifyOtp({
     email,
     token,
-    type: "signup",
+    type: "email",
   });
 
   if (error) {
@@ -149,12 +152,9 @@ export async function reenviarOtp(
   const email = formData.get("email") as string;
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.resend({
-    type: "signup",
+  const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
-    },
+    options: { shouldCreateUser: false },
   });
 
   if (error) {
