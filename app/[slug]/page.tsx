@@ -75,24 +75,26 @@ export default async function BusinessPublicPage({ params }: Props) {
         )}
 
         <div className="max-w-3xl mx-auto px-5">
-          {/* Logo + nombre */}
-          <div className="flex items-end gap-4 -mt-10 mb-5">
+          {/* Logo */}
+          <div className="-mt-10 mb-3">
             {business.logoUrl ? (
-              <div className="w-20 h-20 rounded-2xl border-4 border-white shadow overflow-hidden shrink-0 bg-white">
+              <div className="w-20 h-20 rounded-2xl border-4 border-white shadow overflow-hidden bg-white">
                 <Image src={business.logoUrl} alt="" width={80} height={80} className="object-cover w-full h-full" />
               </div>
             ) : (
               <div
-                className="w-20 h-20 rounded-2xl border-4 border-white shadow shrink-0 flex items-center justify-center text-2xl font-bold text-white"
+                className="w-20 h-20 rounded-2xl border-4 border-white shadow flex items-center justify-center text-2xl font-bold text-white"
                 style={{ backgroundColor: primary }}
               >
                 {business.name.charAt(0).toUpperCase()}
               </div>
             )}
-            <div className="pb-1">
-              <h1 className="text-2xl font-bold text-gray-900">{business.name}</h1>
-              {business.category && <p className="text-sm text-gray-500">{business.category}</p>}
-            </div>
+          </div>
+
+          {/* Nombre */}
+          <div className="mb-5">
+            <h1 className="text-2xl font-bold text-gray-900">{business.name}</h1>
+            {business.category && <p className="text-sm text-gray-500">{business.category}</p>}
           </div>
 
           {/* Info del negocio */}
