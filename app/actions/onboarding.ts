@@ -31,42 +31,47 @@ const paso1Schema = z.object({
 });
 
 export async function guardarPaso1(_prev: { error?: string }, formData: FormData): Promise<{ error?: string }> {
-  const user = await getAuthUser();
+  try {
+    const user = await getAuthUser();
 
-  const raw = {
-    name: formData.get("name") as string,
-    category: formData.get("category") as string,
-    description: formData.get("description") as string,
-    phone: formData.get("phone") as string,
-    address: formData.get("address") as string,
-  };
+    const raw = {
+      name: formData.get("name") as string,
+      category: formData.get("category") as string,
+      description: formData.get("description") as string,
+      phone: formData.get("phone") as string,
+      address: formData.get("address") as string,
+    };
 
-  const result = paso1Schema.safeParse(raw);
-  if (!result.success) return { error: result.error.issues[0].message };
+    const result = paso1Schema.safeParse(raw);
+    if (!result.success) return { error: result.error.issues[0].message };
 
-  // Generar slug único
-  let slug = slugify(result.data.name);
-  const subdomain = toSubdomain(result.data.name);
+    let slug = slugify(result.data.name);
+    const subdomain = toSubdomain(result.data.name);
 
-  // Si ya existe el slug, agregar sufijo numérico
-  const existing = await prisma.business.findUnique({ where: { slug } });
-  if (existing && existing.ownerId !== user.id) {
-    slug = `${slug}-${Date.now().toString().slice(-4)}`;
+    const existing = await prisma.business.findUnique({ where: { slug } });
+    if (existing && existing.ownerId !== user.id) {
+      slug = `${slug}-${Date.now().toString().slice(-4)}`;
+    }
+
+    await prisma.business.upsert({
+      where: { ownerId: user.id },
+      update: { ...result.data, slug, subdomain },
+      create: {
+        ...result.data,
+        slug,
+        subdomain,
+        ownerId: user.id,
+        trialEndsAt: addDays(new Date(), 7),
+      },
+    });
+
+    redirect("/onboarding?paso=2");
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[guardarPaso1]", msg);
+    return { error: `Error: ${msg}` };
   }
-
-  await prisma.business.upsert({
-    where: { ownerId: user.id },
-    update: { ...result.data, slug, subdomain },
-    create: {
-      ...result.data,
-      slug,
-      subdomain,
-      ownerId: user.id,
-      trialEndsAt: addDays(new Date(), 7),
-    },
-  });
-
-  redirect("/onboarding?paso=2");
 }
 
 // ── PASO 2: Logo y portada (URLs de Supabase Storage) ────────────────────────
