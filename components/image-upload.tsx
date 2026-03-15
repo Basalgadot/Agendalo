@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { Label } from "@/components/ui/label";
 import { ImageIcon, X } from "lucide-react";
 
@@ -10,10 +9,9 @@ interface Props {
   defaultValue?: string | null;
   label: string;
   hint?: string;
-  bucket?: string;
 }
 
-export function ImageUpload({ name, defaultValue, label, hint, bucket = "logos" }: Props) {
+export function ImageUpload({ name, defaultValue, label, hint }: Props) {
   const [url, setUrl] = useState(defaultValue || "");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,18 +25,12 @@ export function ImageUpload({ name, defaultValue, label, hint, bucket = "logos" 
     setError(null);
 
     try {
-      const supabase = createClient();
-      const ext = file.name.split(".").pop() ?? "jpg";
-      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-
-      const { data, error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(path, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(data.path);
-      setUrl(publicUrl);
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setUrl(data.url);
     } catch {
       setError("No se pudo subir la imagen. Intenta de nuevo.");
     } finally {
