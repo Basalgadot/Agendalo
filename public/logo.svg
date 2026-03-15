@@ -14,7 +14,7 @@
   <!-- "e" blanco -->
   <text x="101" y="44" font-family="'Space Grotesk', 'Inter', sans-serif" font-size="32" font-weight="700" fill="#FFFFFF" letter-spacing="-0.5">e</text>
   <!-- Tilde naranja sobre la "e" -->
-  <path d="M 105 21 Q 110 12 116 16" stroke="#F97316" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <line x1="107" y1="22" x2="112" y2="12" stroke="#F97316" stroke-width="3" stroke-linecap="round"/>
   <!-- "ndalo" blanco -->
   <text x="119" y="44" font-family="'Space Grotesk', 'Inter', sans-serif" font-size="32" font-weight="700" fill="#FFFFFF" letter-spacing="-0.5">ndalo</text>
 </svg>
