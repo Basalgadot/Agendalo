@@ -76,7 +76,7 @@ export default async function BusinessPublicPage({ params }: Props) {
 
         <div className="max-w-3xl mx-auto px-5">
           {/* Logo */}
-          <div className="-mt-10 mb-3">
+          <div className="-mt-10 mb-3 relative z-10">
             {business.logoUrl ? (
               <div className="w-20 h-20 rounded-2xl border-4 border-white shadow overflow-hidden bg-white">
                 <Image src={business.logoUrl} alt="" width={80} height={80} className="object-cover w-full h-full" />
