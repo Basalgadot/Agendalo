@@ -103,10 +103,25 @@ export function ConfiguracionClient({ business, schedules }: Props) {
       </Card>
 
       <Tabs defaultValue="info">
-        <TabsList className="mb-6">
-          <TabsTrigger value="info">Información</TabsTrigger>
-          <TabsTrigger value="horarios">Horarios</TabsTrigger>
-          <TabsTrigger value="apariencia">Apariencia</TabsTrigger>
+        <TabsList className="mb-6 h-auto gap-2 bg-transparent p-0">
+          <TabsTrigger
+            value="info"
+            className="px-5 py-2.5 rounded-lg border border-border bg-card text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary"
+          >
+            Información
+          </TabsTrigger>
+          <TabsTrigger
+            value="horarios"
+            className="px-5 py-2.5 rounded-lg border border-border bg-card text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary"
+          >
+            Horarios
+          </TabsTrigger>
+          <TabsTrigger
+            value="apariencia"
+            className="px-5 py-2.5 rounded-lg border border-border bg-card text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary"
+          >
+            Apariencia
+          </TabsTrigger>
         </TabsList>
 
         {/* Información del negocio */}
