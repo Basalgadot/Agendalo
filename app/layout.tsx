@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Space_Grotesk } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const spaceGrotesk = Space_Grotesk({
+const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-sans",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["300", "400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -22,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={`${spaceGrotesk.variable} antialiased`}>
+      <body className={`${plusJakartaSans.variable} antialiased`}>
         {children}
         <Toaster richColors position="top-right" />
       </body>
