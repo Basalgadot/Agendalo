@@ -75,7 +75,7 @@ export default async function AgendarPage({ params }: Props) {
         .brand-dot { background-color: ${primary}; }
       `}</style>
 
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 text-gray-900">
         {/* Header mínimo — solo el nombre del negocio, sin branding de Agéndalo */}
         <header className="bg-white border-b border-gray-100 px-5 py-4">
           <a href={`/${slug}`} className="text-gray-900 font-semibold hover:opacity-80 transition-opacity">

@@ -14,6 +14,54 @@ async function getAuthBusiness() {
   return business;
 }
 
+export async function crearCitaManual(formData: FormData): Promise<{ error?: string }> {
+  const business = await getAuthBusiness();
+
+  const serviceId = formData.get("serviceId") as string;
+  const professionalId = formData.get("professionalId") as string;
+  const date = formData.get("date") as string; // "yyyy-MM-dd"
+  const startTime = formData.get("startTime") as string; // "HH:mm"
+  const guestName = formData.get("guestName") as string;
+  const guestPhone = (formData.get("guestPhone") as string) || null;
+  const notes = (formData.get("notes") as string) || null;
+
+  if (!serviceId || !professionalId || !date || !startTime || !guestName) {
+    return { error: "Completa todos los campos obligatorios" };
+  }
+
+  const service = await prisma.service.findFirst({
+    where: { id: serviceId, businessId: business.id },
+  });
+  if (!service) return { error: "Servicio no encontrado" };
+
+  const [h, m] = startTime.split(":").map(Number);
+  const endMinutes = h * 60 + m + service.duration;
+  const endTime = `${String(Math.floor(endMinutes / 60)).padStart(2, "0")}:${String(endMinutes % 60).padStart(2, "0")}`;
+
+  try {
+    await prisma.booking.create({
+      data: {
+        businessId: business.id,
+        serviceId,
+        professionalId,
+        date: new Date(`${date}T12:00:00Z`),
+        startTime,
+        endTime,
+        status: "CONFIRMED",
+        confirmedAt: new Date(),
+        guestName,
+        guestPhone,
+        notes,
+      },
+    });
+  } catch {
+    return { error: "No se pudo crear la cita. Intenta de nuevo." };
+  }
+
+  revalidatePath("/dashboard");
+  return {};
+}
+
 export async function cambiarEstadoCita(citaId: string, nuevoEstado: string) {
   const business = await getAuthBusiness();
 

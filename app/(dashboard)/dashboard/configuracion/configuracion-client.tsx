@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,9 +9,59 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
 import { guardarInfoNegocio, guardarHorarios, guardarApariencia } from "@/app/actions/configuracion";
+import { ImageUpload } from "@/components/image-upload";
 import type { Business, BusinessSchedule } from "@/types";
 
 const DIAS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+
+// Paleta de colores predefinidos para fácil selección
+const COLORES_PRESET = [
+  "#F97316", "#EF4444", "#EC4899", "#8B5CF6",
+  "#3B82F6", "#06B6D4", "#10B981", "#84CC16",
+  "#F59E0B", "#6B7280",
+];
+
+function ColorPicker({ defaultValue }: { defaultValue: string }) {
+  const [color, setColor] = useState(defaultValue);
+  return (
+    <div className="space-y-3">
+      <input type="hidden" name="primaryColor" value={color} />
+      {/* Presets */}
+      <div className="flex flex-wrap gap-2">
+        {COLORES_PRESET.map((c) => (
+          <button
+            key={c}
+            type="button"
+            onClick={() => setColor(c)}
+            className={`w-8 h-8 rounded-full border-2 transition-all ${color === c ? "border-foreground scale-110" : "border-transparent"}`}
+            style={{ backgroundColor: c }}
+          />
+        ))}
+        {/* Custom color input */}
+        <label className="w-8 h-8 rounded-full border-2 border-dashed border-border flex items-center justify-center cursor-pointer overflow-hidden relative" title="Color personalizado">
+          <input
+            type="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+          />
+          <span className="text-xs text-muted-foreground">+</span>
+        </label>
+      </div>
+      {/* Preview */}
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          className="px-4 py-2 rounded-lg text-sm font-medium text-white transition-all"
+          style={{ backgroundColor: color }}
+        >
+          Vista previa del botón
+        </button>
+        <span className="text-xs text-muted-foreground font-mono">{color}</span>
+      </div>
+    </div>
+  );
+}
 
 interface Props {
   business: Business;
@@ -135,42 +185,23 @@ export function ConfiguracionClient({ business, schedules }: Props) {
                 )}
                 <div className="space-y-2">
                   <Label>Color principal</Label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      name="primaryColor"
-                      defaultValue={business.primaryColor ?? "#F97316"}
-                      className="h-10 w-16 cursor-pointer rounded-lg border border-border p-1"
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      Define el color de botones y acentos en tu página pública
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>URL del logo</Label>
-                  <Input
-                    name="logoUrl"
-                    type="url"
-                    defaultValue={business.logoUrl ?? ""}
-                    placeholder="https://tu-sitio.com/logo.png"
-                  />
+                  <ColorPicker defaultValue={business.primaryColor ?? "#F97316"} />
                   <p className="text-xs text-muted-foreground">
-                    Aparece en la esquina superior de tu página. Recomendado: imagen cuadrada 200×200px.
+                    Define el color de botones y acentos en tu página pública.
                   </p>
                 </div>
-                <div className="space-y-2">
-                  <Label>URL de imagen de portada</Label>
-                  <Input
-                    name="coverUrl"
-                    type="url"
-                    defaultValue={business.coverUrl ?? ""}
-                    placeholder="https://tu-sitio.com/portada.jpg"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Banner superior de tu página. Recomendado: 1200×400px.
-                  </p>
-                </div>
+                <ImageUpload
+                  name="logoUrl"
+                  defaultValue={business.logoUrl}
+                  label="Logo del negocio"
+                  hint="Aparece en la esquina superior de tu página. Recomendado: imagen cuadrada 200×200px."
+                />
+                <ImageUpload
+                  name="coverUrl"
+                  defaultValue={business.coverUrl}
+                  label="Imagen de portada"
+                  hint="Banner superior de tu página. Recomendado: 1200×400px."
+                />
                 <Button type="submit" disabled={aparienciaPending}>
                   {aparienciaPending ? "Guardando..." : "Guardar apariencia"}
                 </Button>

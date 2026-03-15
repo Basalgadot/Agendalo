@@ -20,7 +20,7 @@ export default async function DashboardPage() {
   const finSemana = new Date(inicioSemana);
   finSemana.setDate(inicioSemana.getDate() + 6);
 
-  const [citas, profesionales] = await Promise.all([
+  const [citas, profesionales, servicios] = await Promise.all([
     prisma.booking.findMany({
       where: {
         businessId: business.id,
@@ -32,6 +32,10 @@ export default async function DashboardPage() {
     prisma.professional.findMany({
       where: { businessId: business.id, isActive: true },
       orderBy: { order: "asc" },
+    }),
+    prisma.service.findMany({
+      where: { businessId: business.id, isActive: true },
+      orderBy: { name: "asc" },
     }),
   ]);
 
@@ -65,6 +69,7 @@ export default async function DashboardPage() {
         service: { id: c.service.id, name: c.service.name, duration: c.service.duration },
       }))}
       profesionales={profesionales.map((p) => ({ id: p.id, name: p.name }))}
+      servicios={servicios.map((s) => ({ id: s.id, name: s.name, duration: s.duration }))}
       citasHoyCount={citasHoyCount}
       semanaInicio={format(inicioSemana, "yyyy-MM-dd")}
     />

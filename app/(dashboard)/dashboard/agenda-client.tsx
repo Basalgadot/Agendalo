@@ -14,10 +14,11 @@ import {
   User,
   AlertCircle,
   ExternalLink,
+  Plus,
 } from "lucide-react";
 import { format, addDays, parseISO, isToday } from "date-fns";
 import { es } from "date-fns/locale";
-import { cambiarEstadoCita } from "@/app/actions/bookings";
+import { cambiarEstadoCita, crearCitaManual } from "@/app/actions/bookings";
 
 type CitaResumen = {
   id: string;
@@ -42,6 +43,7 @@ interface Props {
   };
   citas: CitaResumen[];
   profesionales: { id: string; name: string }[];
+  servicios: { id: string; name: string; duration: number }[];
   citasHoyCount: number;
   semanaInicio: string;
 }
@@ -62,11 +64,14 @@ const STATUS_COLORS: Record<string, string> = {
   NO_SHOW: "bg-red-100 text-red-800",
 };
 
-export function AgendaClient({ business, citas, profesionales, citasHoyCount, semanaInicio }: Props) {
+export function AgendaClient({ business, citas, profesionales, servicios, citasHoyCount, semanaInicio }: Props) {
   const [semanaOffset, setSemanaOffset] = useState(0);
   const [filtroProf, setFiltroProf] = useState<string>("todos");
   const [citaSeleccionada, setCitaSeleccionada] = useState<CitaResumen | null>(null);
   const [cambiandoEstado, setCambiandoEstado] = useState(false);
+  const [nuevaCitaOpen, setNuevaCitaOpen] = useState(false);
+  const [creandoCita, setCreandoCita] = useState(false);
+  const [errorNuevaCita, setErrorNuevaCita] = useState<string | null>(null);
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://agendalo.app";
 
@@ -88,6 +93,21 @@ export function AgendaClient({ business, citas, profesionales, citasHoyCount, se
   citasFiltradas.forEach((c) => {
     if (citasPorDia[c.date]) citasPorDia[c.date].push(c);
   });
+
+  async function handleNuevaCita(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setCreandoCita(true);
+    setErrorNuevaCita(null);
+    const formData = new FormData(e.currentTarget);
+    const result = await crearCitaManual(formData);
+    setCreandoCita(false);
+    if (result?.error) {
+      setErrorNuevaCita(result.error);
+    } else {
+      setNuevaCitaOpen(false);
+      (e.target as HTMLFormElement).reset();
+    }
+  }
 
   async function handleCambiarEstado(nuevoEstado: string) {
     if (!citaSeleccionada) return;
@@ -123,9 +143,14 @@ export function AgendaClient({ business, citas, profesionales, citasHoyCount, se
             Ver mi página pública <ExternalLink className="h-3 w-3" />
           </a>
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Calendar className="h-4 w-4" />
-          {citasHoyCount} cita{citasHoyCount !== 1 ? "s" : ""} hoy
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Calendar className="h-4 w-4" />
+            {citasHoyCount} cita{citasHoyCount !== 1 ? "s" : ""} hoy
+          </div>
+          <Button onClick={() => setNuevaCitaOpen(true)} size="sm" className="gap-1.5">
+            <Plus className="h-4 w-4" /> Nueva cita
+          </Button>
         </div>
       </div>
 
@@ -225,6 +250,97 @@ export function AgendaClient({ business, citas, profesionales, citasHoyCount, se
           );
         })}
       </div>
+
+      {/* Modal nueva cita */}
+      <Dialog open={nuevaCitaOpen} onOpenChange={setNuevaCitaOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nueva cita</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleNuevaCita} className="space-y-4">
+            {errorNuevaCita && (
+              <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">{errorNuevaCita}</p>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Servicio *</label>
+                <select name="serviceId" required className="w-full h-9 rounded-lg border border-border bg-background px-2.5 text-sm">
+                  <option value="">Selecciona...</option>
+                  {servicios.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name} ({s.duration} min)</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Profesional *</label>
+                <select name="professionalId" required className="w-full h-9 rounded-lg border border-border bg-background px-2.5 text-sm">
+                  <option value="">Selecciona...</option>
+                  {profesionales.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Fecha *</label>
+                <input
+                  type="date"
+                  name="date"
+                  required
+                  defaultValue={format(new Date(), "yyyy-MM-dd")}
+                  className="w-full h-9 rounded-lg border border-border bg-background px-2.5 text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Hora de inicio *</label>
+                <input
+                  type="time"
+                  name="startTime"
+                  required
+                  className="w-full h-9 rounded-lg border border-border bg-background px-2.5 text-sm"
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Nombre del cliente *</label>
+              <input
+                type="text"
+                name="guestName"
+                required
+                placeholder="María González"
+                className="w-full h-9 rounded-lg border border-border bg-background px-2.5 text-sm"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Teléfono (opcional)</label>
+              <input
+                type="tel"
+                name="guestPhone"
+                placeholder="+56 9 1234 5678"
+                className="w-full h-9 rounded-lg border border-border bg-background px-2.5 text-sm"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Notas (opcional)</label>
+              <textarea
+                name="notes"
+                rows={2}
+                placeholder="Indicaciones especiales..."
+                className="w-full rounded-lg border border-border bg-background px-2.5 py-2 text-sm resize-none"
+              />
+            </div>
+            <div className="flex gap-2 pt-1">
+              <Button type="submit" disabled={creandoCita} className="flex-1">
+                {creandoCita ? "Creando..." : "Crear cita"}
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setNuevaCitaOpen(false)}>
+                Cancelar
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal detalle de cita */}
       <Dialog open={!!citaSeleccionada} onOpenChange={() => setCitaSeleccionada(null)}>
