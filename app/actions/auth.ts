@@ -40,6 +40,9 @@ export async function login(
   const { error } = await supabase.auth.signInWithPassword(result.data);
 
   if (error) {
+    if (error.message?.toLowerCase().includes("email not confirmed")) {
+      redirect(`/confirmar-email?email=${encodeURIComponent(result.data.email)}`);
+    }
     return { error: "Email o contraseña incorrectos" };
   }
 
@@ -67,7 +70,10 @@ export async function registro(
   const { data, error } = await supabase.auth.signUp({
     email: result.data.email,
     password: result.data.password,
-    options: { data: { name: result.data.name } },
+    options: {
+      data: { name: result.data.name },
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+    },
   });
 
   if (error) {
@@ -77,8 +83,8 @@ export async function registro(
     return { error: "Error al crear la cuenta. Intenta de nuevo." };
   }
 
-  if (data.user) {
-    // Crear perfil en nuestra DB
+  // Si Supabase no requiere confirmación (dev sin email confirm)
+  if (data.user && data.session) {
     await prisma.user.upsert({
       where: { id: data.user.id },
       update: { name: result.data.name },
@@ -89,9 +95,73 @@ export async function registro(
         role: "BUSINESS_OWNER",
       },
     });
+    redirect("/onboarding");
   }
 
+  // Email de confirmación enviado — redirigir a página OTP
+  redirect(`/confirmar-email?email=${encodeURIComponent(result.data.email)}`);
+}
+
+export async function verificarOtp(
+  _prevState: AuthState,
+  formData: FormData
+): Promise<AuthState> {
+  const email = formData.get("email") as string;
+  const token = (formData.get("token") as string)?.trim();
+
+  if (!token || token.length !== 6) {
+    return { error: "Ingresa el código de 6 dígitos" };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.verifyOtp({
+    email,
+    token,
+    type: "signup",
+  });
+
+  if (error) {
+    return { error: "Código incorrecto o expirado. Revisa tu email o solicita uno nuevo." };
+  }
+
+  if (data.user) {
+    const name = (data.user.user_metadata?.name as string) ?? "Usuario";
+    await prisma.user.upsert({
+      where: { id: data.user.id },
+      update: { name },
+      create: {
+        id: data.user.id,
+        email: data.user.email!,
+        name,
+        role: "BUSINESS_OWNER",
+      },
+    });
+  }
+
+  revalidatePath("/", "layout");
   redirect("/onboarding");
+}
+
+export async function reenviarOtp(
+  _prevState: AuthState,
+  formData: FormData
+): Promise<AuthState> {
+  const email = formData.get("email") as string;
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email,
+    options: {
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+    },
+  });
+
+  if (error) {
+    return { error: "No se pudo reenviar el código. Intenta de nuevo." };
+  }
+
+  return { success: true };
 }
 
 export async function logout() {
