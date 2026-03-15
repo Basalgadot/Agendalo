@@ -1,8 +1,8 @@
 import Link from "next/link";
-import Image from "next/image";
 import { buttonVariants } from "@/lib/button-variants";
 import { cn } from "@/lib/utils";
 import { Calendar, Clock, Users, Zap } from "lucide-react";
+import { Logo } from "@/components/logo";
 
 export default function HomePage() {
   return (
@@ -11,14 +11,7 @@ export default function HomePage() {
       <nav className="bg-[#2D2D2D] border-b border-[#444444] px-8 py-5">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <Link href="/">
-            <Image
-              src="/logo.svg"
-              alt="Agéndalo"
-              width={210}
-              height={52}
-              className="h-13 w-auto object-contain"
-              priority
-            />
+            <Logo />
           </Link>
           <div className="flex gap-4">
             <Link href="/login" className={buttonVariants({ variant: "ghost", size: "lg" })}>
