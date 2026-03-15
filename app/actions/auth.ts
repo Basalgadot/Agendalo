@@ -103,7 +103,7 @@ export async function registro(
     console.error("[registro] DB error (non-fatal):", dbErr);
   }
 
-  redirect(`/confirmar-email?email=${encodeURIComponent(result.data.email)}`);
+  redirect("/onboarding");
 }
 
 export async function reenviarConfirmacion(
