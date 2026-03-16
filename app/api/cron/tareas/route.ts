@@ -6,8 +6,8 @@ import { es } from "date-fns/locale";
 
 export const dynamic = "force-dynamic";
 
-// Cron único (cada hora). Hace dos tareas:
-// 1. Recordatorios: citas que empiezan entre 2.5 y 3.5 horas desde ahora
+// Corre cada día a las 9am UTC. Hace dos cosas:
+// 1. Recordatorios: avisa a todos los clientes con cita hoy
 // 2. Campañas: envía campañas programadas cuya fecha ya llegó
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
@@ -17,18 +17,13 @@ export async function GET(req: NextRequest) {
   }
 
   const now = new Date();
+  const todayStr = format(now, "yyyy-MM-dd");
+  const todayDate = new Date(`${todayStr}T12:00:00Z`);
 
-  // — Tarea 1: Recordatorios —
-  const windowStart = new Date(now.getTime() + 2.5 * 60 * 60 * 1000);
-  const windowEnd   = new Date(now.getTime() + 3.5 * 60 * 60 * 1000);
-  const todayStr    = format(now, "yyyy-MM-dd");
-  const fromTime    = format(windowStart, "HH:mm");
-  const toTime      = format(windowEnd, "HH:mm");
-
+  // — Tarea 1: Recordatorios del día —
   const citas = await prisma.booking.findMany({
     where: {
-      date: new Date(`${todayStr}T12:00:00Z`),
-      startTime: { gte: fromTime, lte: toTime },
+      date: todayDate,
       status: { in: ["CONFIRMED", "PENDING"] },
       reminderSent: false,
       guestEmail: { not: null },
