@@ -6,9 +6,45 @@ import { es } from "date-fns/locale";
 
 export const dynamic = "force-dynamic";
 
+type RecurrenceRule =
+  | { type: "daily" }
+  | { type: "weekly"; days: number[] }   // 0=Dom, 1=Lun, ..., 6=Sáb
+  | { type: "monthly"; dayOfMonth: number };
+
+function debeEnviarHoy(
+  scheduledDates: Date[],
+  recurrenceRule: string | null,
+  recurrenceEndAt: Date | null,
+  lastSentDate: string | null,
+  todayStr: string,
+  dayOfWeek: number,
+  dayOfMonth: number
+): boolean {
+  if (lastSentDate === todayStr) return false; // ya se envió hoy
+
+  // Fechas específicas
+  if (scheduledDates.length > 0) {
+    const matchesDate = scheduledDates.some(
+      (d) => format(d, "yyyy-MM-dd") === todayStr
+    );
+    if (matchesDate) return true;
+  }
+
+  // Recurrencia
+  if (recurrenceRule) {
+    if (recurrenceEndAt && recurrenceEndAt < new Date()) return false;
+    const rule = JSON.parse(recurrenceRule) as RecurrenceRule;
+    if (rule.type === "daily") return true;
+    if (rule.type === "weekly") return rule.days.includes(dayOfWeek);
+    if (rule.type === "monthly") return rule.dayOfMonth === dayOfMonth;
+  }
+
+  return false;
+}
+
 // Corre cada día a las 9am UTC. Hace dos cosas:
-// 1. Recordatorios: avisa a todos los clientes con cita hoy
-// 2. Campañas: envía campañas programadas cuya fecha ya llegó
+// 1. Recordatorios: avisa a los clientes con cita hoy
+// 2. Campañas: envía campañas programadas para hoy (fechas fijas o recurrencia)
 export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
   const secret = process.env.CRON_SECRET;
@@ -19,6 +55,8 @@ export async function GET(req: NextRequest) {
   const now = new Date();
   const todayStr = format(now, "yyyy-MM-dd");
   const todayDate = new Date(`${todayStr}T12:00:00Z`);
+  const dayOfWeek = now.getDay();   // 0=Dom ... 6=Sáb
+  const dayOfMonth = now.getDate();
 
   // — Tarea 1: Recordatorios del día —
   const citas = await prisma.booking.findMany({
@@ -60,13 +98,9 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // — Tarea 2: Campañas programadas —
+  // — Tarea 2: Campañas programadas para hoy —
   const campanas = await prisma.campaign.findMany({
-    where: {
-      status: "SCHEDULED",
-      sentAt: null,
-      scheduledAt: { lte: now },
-    },
+    where: { status: "SCHEDULED" },
     include: {
       business: {
         select: {
@@ -78,7 +112,19 @@ export async function GET(req: NextRequest) {
   });
 
   let emailsCampanas = 0;
+
   for (const campana of campanas) {
+    const debeSalir = debeEnviarHoy(
+      campana.scheduledDates,
+      campana.recurrenceRule,
+      campana.recurrenceEndAt,
+      campana.lastSentDate,
+      todayStr,
+      dayOfWeek,
+      dayOfMonth
+    );
+    if (!debeSalir) continue;
+
     const bookings = await prisma.booking.findMany({
       where: {
         businessId: campana.businessId,
@@ -106,9 +152,15 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    const isRecurring = !!campana.recurrenceRule;
     await prisma.campaign.update({
       where: { id: campana.id },
-      data: { status: "SENT", sentAt: new Date(), recipientCount: enviados },
+      data: {
+        status: isRecurring ? "SCHEDULED" : "SENT",
+        sentAt: isRecurring ? undefined : new Date(),
+        lastSentDate: todayStr,
+        recipientCount: { increment: enviados },
+      },
     });
 
     emailsCampanas += enviados;

@@ -271,7 +271,13 @@ model Campaign {
   subject        String         // Asunto del email
   body           String         @db.Text // Cuerpo en HTML/texto
   status         CampaignStatus @default(DRAFT)
-  scheduledAt    DateTime?      // Cuándo enviar (null = borrador)
+
+  // Programación: fechas específicas o recurrencia
+  scheduledDates  DateTime[]   // Una o varias fechas puntuales
+  recurrenceRule  String?      // JSON: {"type":"weekly","days":[1,3]} / {"type":"daily"} / {"type":"monthly","dayOfMonth":15}
+  recurrenceEndAt DateTime?    // Cuándo termina la recurrencia (null = sin fin)
+  lastSentDate    String?      // "YYYY-MM-DD" — evita envío duplicado el mismo día
+
   sentAt         DateTime?
   recipientCount Int            @default(0)
   createdAt      DateTime       @default(now())

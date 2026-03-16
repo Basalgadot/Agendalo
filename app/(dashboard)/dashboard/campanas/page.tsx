@@ -33,7 +33,9 @@ export default async function CampanasPage() {
         subject: c.subject,
         body: c.body,
         status: c.status,
-        scheduledAt: c.scheduledAt ? format(c.scheduledAt, "dd/MM/yyyy HH:mm") : null,
+        scheduledDates: c.scheduledDates.map((d) => format(d, "yyyy-MM-dd")),
+        recurrenceRule: c.recurrenceRule,
+        recurrenceEndAt: c.recurrenceEndAt ? format(c.recurrenceEndAt, "dd/MM/yyyy") : null,
         sentAt: c.sentAt ? format(c.sentAt, "dd/MM/yyyy HH:mm") : null,
         recipientCount: c.recipientCount,
       }))}
