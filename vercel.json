@@ -1,12 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/cron/recordatorios",
+      "path": "/api/cron/tareas",
       "schedule": "0 * * * *"
-    },
-    {
-      "path": "/api/cron/campanas",
-      "schedule": "0 9 * * *"
     }
   ]
 }
